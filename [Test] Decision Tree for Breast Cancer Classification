@@ -1,3 +1,8 @@
+#Tugas UTS SLO Kelompok 7
+#1. Ahmad Mumtaz
+#2. Samsinar Ilyas
+#3. Suhartina Hajrahnur
+
 pip install sklearn
 
 pip install --upgrade category_encoders
