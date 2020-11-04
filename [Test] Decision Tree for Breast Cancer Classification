@@ -1,0 +1,124 @@
+pip install sklearn
+
+pip install --upgrade category_encoders
+
+import pandas as pd
+from google.colab import files
+
+uploaded = files.upload()
+#nanti akan dipilih file dataset dari storage laptop/pc
+
+for fn in uploaded.keys():
+  print('User uploaded file "{name}" with length {length} bytes'.format(
+      name=fn, length=len(uploaded[fn])))
+      
+uploaded
+
+import io
+
+dataset = pd.read_csv(io.StringIO(uploaded['breast-cancer.csv'].decode('utf-8')))
+
+dataset.head()#membaca 5 baris paling awal dari dataset
+
+dataset=pd.read_csv("breast-cancer.csv",names=['class','age','menopause','tumor size','inv-node','node-caps','deg-malig','breast','breast-quad','irradiat'])
+
+pd.set_option("display.max_rows", None, "display.max_columns", None)
+dataset
+
+dataset=dataset[['age','menopause','tumor size','inv-node','node-caps','deg-malig','breast','breast-quad','irradiat','class']]
+dataset  # There is missing value in node-caps column
+
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+
+dataset.replace("?", np.nan, inplace = True)
+
+dataset.duplicated().sum()
+
+# Hilangkan duplikasi data
+dataset.drop_duplicates(inplace=True)
+dataset.duplicated().sum()
+
+dataset.info()
+
+dataset.dropna(inplace=True)
+
+dataset.index=range(len(dataset))
+dataset.describe(include='all') #CLEAN
+
+X = dataset.iloc[:, 0:9].values
+X
+
+y = dataset.iloc[:, 9].values
+y
+
+# Mengonversi data biner (node-caps, breast,irradiat,class) menjadi numerik
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
+from sklearn.compose import ColumnTransformer
+labelencoder = LabelEncoder()
+X[:, 4] = labelencoder.fit_transform(X[:, 4])
+X[:, 6] = labelencoder.fit_transform(X[:, 4])
+X[:, 8] = labelencoder.fit_transform(X[:, 8])
+y = labelencoder.fit_transform(y)
+X
+
+dataset.head()
+
+pd.set_option("display.max_rows", None, "display.max_columns", None)
+dataset
+
+import seaborn as sns # statistical data visualization
+%matplotlib inline
+
+X = dataset.drop(['class'], axis=1)
+y = dataset['class']
+
+# split X and y dalam training and testing sets
+from sklearn.model_selection import train_test_split
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size = 0.20, random_state = 42)
+
+# check data types in X_train
+X_train.dtypes
+
+# import category encoders
+import category_encoders as ce
+
+# encode variables with ordinal encoding
+encoder = ce.OrdinalEncoder(cols=['age', 'menopause', 'tumor size', 'inv-node', 'node-caps', 'deg-malig', 'breast', 'breast-quad', 'irradiat'])
+X_train = encoder.fit_transform(X_train)
+X_test = encoder.transform(X_test)
+
+X_train.head(10)
+
+pd.set_option("display.max_rows", None, "display.max_columns", None)
+X_train
+
+X_test.head()
+
+# import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier
+
+# instantiate the DecisionTreeClassifier model with criterion entropy
+clf_en = DecisionTreeClassifier(criterion='entropy', max_depth=3, random_state=0)
+# fit the model
+clf_en.fit(X_train, y_train)
+
+y_pred_en = clf_en.predict(X_test)
+
+from sklearn.metrics import accuracy_score
+print('Model accuracy score with criterion entropy: {0:0.4f}'. format(accuracy_score(y_test, y_pred_en)))
+
+y_pred_train_en = clf_en.predict(X_train)
+y_pred_train_en
+
+print('Training-set accuracy score: {0:0.4f}'. format(accuracy_score(y_train, y_pred_train_en)))
+
+# print the scores on training and test set
+print('Training set score: {:.4f}'.format(clf_en.score(X_train, y_train)))
+print('Test set score: {:.4f}'.format(clf_en.score(X_test, y_test)))
+
+plt.figure(figsize=(12,8))
+from sklearn import tree
+tree.plot_tree(clf_en.fit(X_train, y_train))
+
